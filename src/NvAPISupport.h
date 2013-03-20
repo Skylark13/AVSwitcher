@@ -16,8 +16,8 @@ public:
     /// Switch the display that currently has displayId1 to displayId2, or vice versa.
     void swapDisplays(NvU32 displayId1, NvU32 displayId2);
 
-    /// Switch display to use a given displayId.
-    void switchToDisplay(NvU32 display, NvU32 displayId1);
+    /// Switch display:target to use a given displayId (if it isn't already).
+    void switchToDisplay(NvU32 display, NvU32 target, NvU32 displayId1);
 
 private:
     NVApiManager();

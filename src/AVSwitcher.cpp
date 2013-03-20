@@ -66,6 +66,7 @@ int _tmain(int argc, _TCHAR* argv[])
                 {
                     ++i;
                     std::wstring arg1(argv[i]);
+
                     AudioPlaybackDevice* device1 = AudioPlaybackDeviceManager::getInstance()->findDeviceFromNameSubString(arg1);
                     if (device1)
                     {
@@ -93,13 +94,11 @@ int _tmain(int argc, _TCHAR* argv[])
                 if (i+2 < (unsigned int)argc)
                 {
                     ++i;
-                    std::wstring arg1(argv[i]);
                     NvU32 displayId1 = 0;
-                    swscanf(arg1.c_str(), L"%u", &displayId1);
+                    swscanf(argv[i], L"%u", &displayId1);
                     ++i;
-                    std::wstring arg2(argv[i]);
                     NvU32 displayId2 = 0;
-                    swscanf(arg2.c_str(), L"%u", &displayId2);
+                    swscanf(argv[i], L"%u", &displayId2);
 
                     NVApiManager::getInstance()->swapDisplays(displayId1, displayId2);
                 }
@@ -110,18 +109,19 @@ int _tmain(int argc, _TCHAR* argv[])
             }
             else if (arg == L"switchToDisplay")
             {
-                if (i+2 < (unsigned int)argc)
+                if (i+3 < (unsigned int)argc)
                 {
                     ++i;
-                    std::wstring arg1(argv[i]);
                     NvU32 display = 0;
-                    swscanf(arg1.c_str(), L"%u", &display);
+                    swscanf(argv[i], L"%u", &display);
                     ++i;
-                    std::wstring arg2(argv[i]);
+                    NvU32 target = 0;
+                    swscanf(argv[i], L"%u", &target);
+                    ++i;
                     NvU32 displayId1 = 0;
-                    swscanf(arg1.c_str(), L"%u", &displayId1);
+                    swscanf(argv[i], L"%u", &displayId1);
 
-                    NVApiManager::getInstance()->switchToDisplay(display, displayId1);
+                    NVApiManager::getInstance()->switchToDisplay(display, target, displayId1);
                 }
                 else
                 {

@@ -113,22 +113,26 @@ namespace
             retval = NvAPI_DISP_SetDisplayConfig(m_pathInfoCount, m_pathInfos, NV_DISPLAYCONFIG_VALIDATE_ONLY);
             if (retval == NVAPI_OK)
             {
-                printf("Validation successful\n");
+                printf("  Validation successful\n");
 
                 retval = NvAPI_DISP_SetDisplayConfig(m_pathInfoCount, m_pathInfos, NV_DISPLAYCONFIG_SAVE_TO_PERSISTENCE | NV_DISPLAYCONFIG_DRIVER_RELOAD_ALLOWED);
 
                 if (retval == NVAPI_OK)
                 {
-                    printf("Apply successful\n");
+                    printf("  Apply successful\n");
                 }
                 else
                 {
-                    printf("Apply failed: %u\n", retval);
+                    NvAPI_ShortString error;
+                    NvAPI_GetErrorMessage(retval, error);
+                    printf("  Error: Apply failed: %u - %s\n", retval, error);
                 }
             }
             else
             {
-                printf("Validation failed: %u\n", retval);
+                NvAPI_ShortString error;
+                NvAPI_GetErrorMessage(retval, error);
+                printf("  Error: Validation failed: %u - %s\n", retval, error);
             }
         }
 
@@ -164,8 +168,13 @@ void NVApiManager::dumpAttachedDisplays()
         NvAPI_GetAssociatedNvidiaDisplayName(handle, name);
         NvU32 outputId = 0;
         NvAPI_GetAssociatedDisplayOutputId(handle, &outputId);
-        printf("Attached Display %u : %s - Output "U32TOBINARYPATTERN"\n", i, name, U32TOBINARY(outputId));
+        printf("  Display %u : %s - Output "U32TOBINARYPATTERN"\n", i, name, U32TOBINARY(outputId));
         ++i;
+    }
+
+    if (i == 0)
+    {
+        printf("  None\n");
     }
 }
 
@@ -179,8 +188,13 @@ void NVApiManager::dumpUnAttachedDisplays()
     {
         NvAPI_ShortString name;
         NvAPI_GetUnAttachedAssociatedDisplayName(uhandle, name);
-        printf("Unattached Display %u : %s\n", i, name);
+        printf("  Display %u : %s\n", i, name);
         ++i;
+    }
+
+    if (i == 0)
+    {
+        printf("  None\n");
     }
 }
 
@@ -203,7 +217,7 @@ void NVApiManager::dumpAllDisplayIds()
     for (unsigned int i = 0; i < displayIDs.m_displayIdCount; ++i)
     {
         const NV_GPU_DISPLAYIDS& displayID = displayIDs.m_displayIDs[i];
-        printf("Display %u  DisplayId %u IsActive %s IsOSVisible %s", 
+        printf("  Display %u  DisplayId %u IsActive %s IsOSVisible %s", 
             i, displayID.displayId, BOOLTOSTRING(displayID.isActive), BOOLTOSTRING(displayID.isOSVisible));
         printf("  Connector type: ");
         if (displayID.connectorType != -1)
@@ -224,7 +238,7 @@ void NVApiManager::dumpDisplayConfig()
 
     for (unsigned int i = 0; i < displayConfig.m_pathInfoCount; ++i)
     {
-        printf("PathInfo %u IsNonNVidia %s\n", i, BOOLTOSTRING(displayConfig.m_pathInfos[i].IsNonNVIDIAAdapter));
+        printf("  PathInfo %u IsNonNVidia %s\n", i, BOOLTOSTRING(displayConfig.m_pathInfos[i].IsNonNVIDIAAdapter));
         if (displayConfig.m_pathInfos[i].sourceModeInfo)
         {
             const NV_DISPLAYCONFIG_SOURCE_MODE_INFO& info = *displayConfig.m_pathInfos[i].sourceModeInfo;
@@ -261,7 +275,7 @@ void NVApiManager::swapDisplays(NvU32 displayId1, NvU32 displayId2)
     NvAPIDisplayConfig displayConfig;
     bool changesToApply = false;
 
-    printf("Swap displayId %u --> displayId %u\n", displayId1, displayId2);
+    printf("Swap displayId %u <--> displayId %u\n", displayId1, displayId2);
     for (unsigned int i = 0; i < displayConfig.m_pathInfoCount; ++i)
     {
         for (unsigned int j = 0; j < displayConfig.m_pathInfos[i].targetInfoCount; ++j)
@@ -286,31 +300,36 @@ void NVApiManager::swapDisplays(NvU32 displayId1, NvU32 displayId2)
     {
         displayConfig.apply();
     }
+    else
+    {
+        printf("  Nothing to do: Looks like no target had displayId %u or %u.\n", displayId1, displayId2);
+    }
 }
 
 /// Switch display to use a given displayId.
-void NVApiManager::switchToDisplay(NvU32 display, NvU32 displayId1)
+void NVApiManager::switchToDisplay(NvU32 display, NvU32 target, NvU32 displayId1)
 {
     NvAPIDisplayConfig displayConfig;
     bool changesToApply = false;
 
-    printf("Switch display %u --> displayId %u\n", display, displayId1);
-    for (unsigned int i = 0; i < displayConfig.m_pathInfoCount; ++i)
+    printf("Switch display %u : %u --> displayId %u\n", display, target, displayId1);
+    if (display < displayConfig.m_pathInfoCount && target < displayConfig.m_pathInfos[display].targetInfoCount)
     {
-        if (i != display) continue;
+        NV_DISPLAYCONFIG_PATH_TARGET_INFO& targetInfo = displayConfig.m_pathInfos[display].targetInfo[target];
 
-        for (unsigned int j = 0; j < displayConfig.m_pathInfos[i].targetInfoCount; ++j)
+        // Do the switch.
+        if (targetInfo.displayId != displayId1)
         {
-            NV_DISPLAYCONFIG_PATH_TARGET_INFO& target = displayConfig.m_pathInfos[i].targetInfo[j];
-
-            // Do the switch.
-            target.displayId = displayId1;
-            changesToApply = true;
+            targetInfo.displayId = displayId1;
+            displayConfig.apply();
+        }
+        else
+        {
+            printf("  Nothing to do: Display %u : %u is already switched to displayId %u\n", display, target, displayId1);
         }
     }
-
-    if (changesToApply)
+    else
     {
-        displayConfig.apply();
+        printf("  Error: No display %u : %u\n", display, target);
     }
 }

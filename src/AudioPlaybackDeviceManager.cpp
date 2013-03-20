@@ -21,7 +21,9 @@ void AudioPlaybackDeviceManager::dumpAllDeviceInfo()
 {
     for (unsigned int i = 0; i < m_devices.size(); ++i)
     {
-        printf("Audio Device %u (default: %s): %ws -- %ws\n", i, BOOLTOSTRING(m_devices[i]->_default), m_devices[i]->_id, m_devices[i]->_name.pwszVal);
+        printf("  Audio Device %u (default: %s):\n", i, BOOLTOSTRING(m_devices[i]->_default));
+        printf("    Name: %ws\n", m_devices[i]->_name.pwszVal);
+        printf("    Id  : %ws\n", m_devices[i]->_id);
     }
 }
 
