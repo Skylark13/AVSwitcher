@@ -107,6 +107,66 @@ namespace
             free(m_pathInfos);
         }
 
+        // Adding more than one targetInfo clones the display onto the other display(s).
+        void addTargetInfo(unsigned int pathInfoIndex, const NV_DISPLAYCONFIG_PATH_TARGET_INFO& targetInfo)
+        {
+            unsigned int oldNum = m_pathInfos[pathInfoIndex].targetInfoCount;
+            unsigned int num = oldNum+1;
+            m_pathInfos[pathInfoIndex].targetInfoCount = num;
+
+            // Allocate new memory
+            NV_DISPLAYCONFIG_PATH_TARGET_INFO* newTargetInfo = (NV_DISPLAYCONFIG_PATH_TARGET_INFO*)malloc(sizeof(NV_DISPLAYCONFIG_PATH_TARGET_INFO) * num);
+
+            // Copy old data
+            if (oldNum > 0)
+            {
+                memcpy(newTargetInfo, m_pathInfos[pathInfoIndex].targetInfo, sizeof(NV_DISPLAYCONFIG_PATH_TARGET_INFO) * oldNum);
+            }
+
+            // Copy new data
+            memcpy(&newTargetInfo[oldNum], &targetInfo, sizeof(NV_DISPLAYCONFIG_PATH_TARGET_INFO));
+
+            // Delete old memory
+            free(m_pathInfos[pathInfoIndex].targetInfo);
+
+            // Replace pointer
+            m_pathInfos[pathInfoIndex].targetInfo = newTargetInfo;
+        }
+
+        // Removing a targetInfo when there is more than one removes the cloning.
+        void removeTargetInfo(unsigned int pathInfoIndex, unsigned int targetInfoIndexToRemove)
+        {
+            unsigned int oldNum = m_pathInfos[pathInfoIndex].targetInfoCount;
+            if (oldNum == 0)
+                return;
+
+            unsigned int num = oldNum-1;
+            m_pathInfos[pathInfoIndex].targetInfoCount = num;
+
+            if (num == 0)
+            {
+                m_pathInfos[pathInfoIndex].targetInfo = NULL;
+                return;
+            }
+
+            // Allocate new memory
+            NV_DISPLAYCONFIG_PATH_TARGET_INFO* newTargetInfo = (NV_DISPLAYCONFIG_PATH_TARGET_INFO*)malloc(sizeof(NV_DISPLAYCONFIG_PATH_TARGET_INFO) * num);
+
+            // Copy old data, skipping the one we want to remove
+            for (unsigned int i = 0; i < oldNum; ++i)
+            {
+                if (i == targetInfoIndexToRemove) continue;
+                unsigned int j = i < targetInfoIndexToRemove ? i : i-1;
+                memcpy(&newTargetInfo[j], &m_pathInfos[pathInfoIndex].targetInfo[i], sizeof(NV_DISPLAYCONFIG_PATH_TARGET_INFO));
+            }
+
+            // Delete old memory
+            free(m_pathInfos[pathInfoIndex].targetInfo);
+
+            // Replace pointer
+            m_pathInfos[pathInfoIndex].targetInfo = newTargetInfo;
+        }
+
         void apply()
         {
             NvAPI_Status retval = NVAPI_OK;
@@ -333,3 +393,62 @@ void NVApiManager::switchToDisplay(NvU32 display, NvU32 target, NvU32 displayId1
         printf("  Error: No display %u : %u\n", display, target);
     }
 }
+
+/// Clone displayId1 with displayId2 - if displayId2 is 0 the cloning is removed.
+void NVApiManager::cloneDisplay(NvU32 displayId1, NvU32 displayId2)
+{
+    NvAPIDisplayConfig displayConfig;
+
+    printf("Clone displayId %u --> displayId %u\n", displayId1, displayId2);
+    for (unsigned int i = 0; i < displayConfig.m_pathInfoCount; ++i)
+    {
+        for (unsigned int j = 0; j < displayConfig.m_pathInfos[i].targetInfoCount; ++j)
+        {
+            const NV_DISPLAYCONFIG_PATH_TARGET_INFO& target = displayConfig.m_pathInfos[i].targetInfo[j];
+
+            // Do the cloning.
+            if (target.displayId == displayId1)
+            {
+                if (displayId2 != 0)
+                {
+                    // make sure we're not re-cloning a second time (doubt the driver would 
+                    // let us do that, but better not try).
+                    for (unsigned int k = 0; k < displayConfig.m_pathInfos[i].targetInfoCount; ++k)
+                    {
+                        if (displayConfig.m_pathInfos[i].targetInfo[k].displayId == displayId2)
+                        {
+                            printf("displayId %u is already cloned on displayId %u\n", displayId1, displayId2);
+                            return;
+                        }
+                    }
+
+                    NV_DISPLAYCONFIG_PATH_TARGET_INFO clone = target;
+                    clone.displayId = displayId2;
+
+                    displayConfig.addTargetInfo(i, clone);
+                    displayConfig.apply();
+                    return;
+                }
+                else
+                {
+                    // Remove any display that is not displayId1
+                    for (unsigned int k = 0; k < displayConfig.m_pathInfos[i].targetInfoCount; ++k)
+                    {
+                        if (displayConfig.m_pathInfos[i].targetInfo[k].displayId != displayId1)
+                        {
+                            displayConfig.removeTargetInfo(i, k);
+                        }
+                    }
+                    displayConfig.apply();
+
+                    return;
+                }
+            }
+        }
+    }
+
+    printf("  Error: No displayId %u\n", displayId1);
+}
+
+
+

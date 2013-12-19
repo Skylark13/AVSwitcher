@@ -19,6 +19,9 @@ public:
     /// Switch display:target to use a given displayId (if it isn't already).
     void switchToDisplay(NvU32 display, NvU32 target, NvU32 displayId1);
 
+    /// Clone displayId1 with displayId2 - if displayId2 is 0 the cloning is removed.
+    void cloneDisplay(NvU32 displayId1, NvU32 displayId2);
+
 private:
     NVApiManager();
     ~NVApiManager();

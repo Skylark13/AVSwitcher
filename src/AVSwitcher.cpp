@@ -125,7 +125,25 @@ int _tmain(int argc, _TCHAR* argv[])
                 }
                 else
                 {
-                    printf("Error: Must specify a displayId for switchToDisplay.\n");
+                    printf("Error: Must specify a display, target and displayId for switchToDisplay.\n");
+                }
+            }
+            else if (arg == L"cloneDisplay")
+            {
+                if (i+2 < (unsigned int)argc)
+                {
+                    ++i;
+                    NvU32 displayId1 = 0;
+                    swscanf(argv[i], L"%u", &displayId1);
+                    ++i;
+                    NvU32 displayId2 = 0;
+                    swscanf(argv[i], L"%u", &displayId2);
+
+                    NVApiManager::getInstance()->cloneDisplay(displayId1, displayId2);
+                }
+                else
+                {
+                    printf("Error: Must specify two displayIds for cloneDisplay.\n");
                 }
             }
             else
