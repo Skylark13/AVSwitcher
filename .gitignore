@@ -1,1 +1,5 @@
-/*.sdf
+*.sdf
+*.suo
+/bin
+/ipch
+/tmp
