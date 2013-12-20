@@ -6,15 +6,15 @@ Utility to switch displays and audio devices on Windows
 
 The goal of this little utility is to switch displays and audio devices.
 
-If you have a PC which you use both for regular "work" and for watching movies or gaming on a TV, you may want to automate switching between different video and audio outputs. AVSwitcher allows you to do this using for example AutoHotKey to it to a key.
+If you have a PC which you use both for regular "work" and for watching movies or gaming on a TV, you may want to automate switching between different video and audio outputs. AVSwitcher allows you to do this using for example AutoHotKey to bind it to a key.
 
 ## Example
 
-I normally use my PC with 2 1920x120\. monitors and with audio output through my PC's default audio chipset (either speakers or headphones).
+I normally use my PC with two 1920x1200 monitors and with audio output through my PC's default audio chipset (either speakers or headphones).
 
-I sometimes want to watch movies or TV series, or play games, on my big screen TV. The TV is 1920x1080\. and I want to view my primary monitor on it, but I do not want to always set the TV to clone the primary monitor, because it would then force that monitor to only output 1920x1080\. Also, in that case I want the audio output to go through the HDMI audio output, not the default audio chipset.
+I sometimes want to watch movies or TV series, or play games, on my big screen TV. The TV is 1920x1080, and I want to view my primary monitor on it, but I do not want to always set the TV to clone the primary monitor, because it would then force that monitor to only output 1920x1080. Also, in that case I want the audio output to go through the HDMI audio output, not the default audio chipset.
 
-Having to go to NVidia control panel to enable and disable cloning of the primary monitor on the TV, and switching the audio output to HDMI and back, would involve a lot of clicking each time. Instead, I made this little utility which I can bind to Ctrl-Alt-F1 to switch to the TV, and Ctrl-Alt-F2 to switch back, and so when I get in front of my TV, I just grab my wireless keyboard, hit the keyboard shortcut, and voilà, everything is switched.
+Having to go to NVidia control panel to enable and disable cloning of the primary monitor on the TV, and switching the audio output to HDMI and back, would involve a lot of clicking each time. Instead, I made this little utility which I can bind to a keyboard shortcut to switch to the TV, and another keyboard shortcut to switch back, and so when I get in front of my TV, I just grab my wireless keyboard, hit the keyboard shortcut, and voilà, everything is switched.
 
 ## Limitations
 
@@ -23,6 +23,8 @@ Audio switching uses Windows APIs so it should work on any hardware.
 I currently only have video output switching implemented for NVidia hardware (which is what I use obviously).
 
 If this should ever be made to work on both NVidia and AMD hardware, I suspect some of the inherent assumptions that made me design the program the way it is would no longer be true. It may require pretty deep changes. But I welcome any contributions to make that happen, as it will only make this utility more useful.
+
+Also note that only the switching options below are implemented, even though you could do other things with the underlying APIs (Windows APIs for audio, and NVAPI for video). I just created the options that were useful to me.
 
 ## Command line
 
@@ -50,7 +52,7 @@ Example: `AVSwitcher swapDisplays 2147881090 2147881089`
 
 * `AVSwitcher switchToDisplay display target displayId`
 
-Switches the output identified as display:target to the given displayId. If the output is your primary display, then display is 0, else it's a higher number. If the output is not cloned, then target is 0.
+Switches the output identified as display:target to the given displayId. If the output is your primary display, then display is 0, else it's a higher number. If the output is not cloned, then target is 0, if it is cloned, it may be higher than 1.
 
 Example: `AVSwitcher switchToDisplay 0 0 2147881090`
 
@@ -65,4 +67,4 @@ Example: `AVSwitcher cloneDisplay 2147881090 0`
 
 I have used the Apache license as I wanted a permissive license.
 
-Note that I have included NVAPI in the source. IANAL, but having read the NVAPI license, it seems to imply that I have the right to copy and redistribute it as long as I don't modify it or remove the copyright notices, or try to pass it off as my own work. If this is not the case, I can remove it and provide instructions as to where to place the files so that people who want to build AVSwitcher can get it themselves. Just let me know. I have made no attempt to infringe on anything by this.
+Note that I have included NVAPI in the source. IANAL, but having read the NVAPI license, it seems to imply that I have the right to copy and redistribute it as long as I don't modify it or remove the copyright notices, or try to pass it off as my own work. If this is not the case, I can remove it and provide instructions as to where to download it from and where to place the files so that people who want to build AVSwitcher can get it themselves directly from NVidia. Just let me know. I have made no attempt to infringe on anything by this.
